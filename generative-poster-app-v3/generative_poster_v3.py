@@ -5,15 +5,13 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import io
 from colorsys import hsv_to_rgb
+
 # ---------------------------------------
 # Page config
 # ---------------------------------------
 st.set_page_config(page_title="Generative Poster v3", layout="wide")
 st.title("Generative Abstract Poster v3")
 st.markdown("**Interactive - Arts & Advanced Big Data**  \nAuto-refresh + Randomize button - Palette & Background themes")
-
-st.markdown("Auto-refresh + Randomize button - Palette & Background themes")
-
 
 # ---------------------------------------
 # Palette utilities
@@ -31,7 +29,6 @@ def pastel_palette(k=6):
     return cols
 
 def vibrant_palette(k=6):
-    # fixed vibrant anchors mixed with slight random jitter
     anchors = [
         (0.95, 0.30, 0.30),  # red
         (1.00, 0.65, 0.00),  # orange
@@ -49,7 +46,6 @@ def vibrant_palette(k=6):
     return cols
 
 def mono_palette(k=6):
-    # pick a random hue, generate value steps
     h = random.random()
     base = np.linspace(0.35, 0.95, k)
     cols = []
@@ -151,13 +147,12 @@ def set_background(ax, bg_mode):
         ax.set_facecolor((0.08, 0.08, 0.08))
         return "light"
     if bg_mode == "Gradient":
-        # vertical gradient top light -> bottom darker
         gradient = np.linspace(0.95, 0.75, 512).reshape(-1, 1)
         grad_img = np.dstack([gradient, gradient, gradient])
         ax.imshow(grad_img, extent=[0, 1, 0, 1], origin="lower", zorder=-10)
-        ax.set_facecolor((1,1,1,0))
+        ax.set_facecolor((1, 1, 1, 0))
         return "dark"
-    ax.set_facecolor((1,1,1))
+    ax.set_facecolor((1, 1, 1))
     return "dark"
 
 # ---------------------------------------
@@ -186,20 +181,20 @@ def draw_poster(shape_type="Blob", n_layers=8, wobble=0.15, palette_kind="Pastel
 
         if shape_type == "Blob":
             x, y = blob((cx, cy), rr, wobble=wobble)
-            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0,0,0,0))
+            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0, 0, 0, 0))
         elif shape_type == "Polygon":
-            x, y = polygon((cx, cy), sides=random.randint(3,8), r=rr, wobble=wobble)
-            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0,0,0,0))
+            x, y = polygon((cx, cy), sides=random.randint(3, 8), r=rr, wobble=wobble)
+            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0, 0, 0, 0))
         elif shape_type == "Waves":
-            x, y = waves((cx, cy), rr, frequency=random.randint(4,8), wobble=wobble)
-            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0,0,0,0))
+            x, y = waves((cx, cy), rr, frequency=random.randint(4, 8), wobble=wobble)
+            ax.fill(x, y, color=color, alpha=alpha, edgecolor=(0, 0, 0, 0))
         elif shape_type == "Rings":
-            for x, y in rings((cx, cy), rr, count=random.randint(2,4), wobble=wobble):
+            for x, y in rings((cx, cy), rr, count=random.randint(2, 4), wobble=wobble):
                 ax.plot(x, y, color=color, alpha=alpha, lw=2)
 
-    txt_color = (0.95,0.95,0.95) if text_color_mode=="light" else (0.1,0.1,0.1)
+    txt_color = (0.95, 0.95, 0.95) if text_color_mode == "light" else (0.1, 0.1, 0.1)
     ax.text(0.05, 0.95, "Generative Poster", fontsize=18, weight="bold", transform=ax.transAxes, color=txt_color)
-    ax.text(0.05, 0.91, "Interactive • Arts & Advanced Big Data", fontsize=11, transform=ax.transAxes, color=txt_color)
+    ax.text(0.05, 0.91, "Interactive - Arts & Advanced Big Data", fontsize=11, transform=ax.transAxes, color=txt_color)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     return fig
@@ -208,23 +203,19 @@ def draw_poster(shape_type="Blob", n_layers=8, wobble=0.15, palette_kind="Pastel
 # Sidebar controls
 # ---------------------------------------
 with st.sidebar:
-    st.header("⚙️ Controls")
+    st.header("Controls")
     shape = st.selectbox("Shape Type", ["Blob", "Polygon", "Waves", "Rings"])
     layers = st.slider("Number of Layers", 1, 20, 8, 1)
     wobble = st.slider("Wobble Intensity", 0.01, 0.5, 0.15, 0.01)
     palette_kind = st.selectbox("Palette", ["Pastel", "Vibrant", "Mono", "Random", "Pink", "Blue", "Green"])
     bg_mode = st.selectbox("Background", ["Off-white", "Light gray", "Dark", "Gradient"])
     seed_in = st.text_input("Seed (optional, int)", value="")
-    # Manual randomize button: bump an internal counter to force a new random state
     if "reroll" not in st.session_state:
         st.session_state.reroll = 0
-    if st.button("🎲 Generate Random Poster"):
+    if st.button("Generate Random Poster"):
         st.session_state.reroll += 1
 
-# derive an effective seed from user seed + reroll counter (so button changes even with same seed)
-effective_seed = None
 if seed_in.strip() == "":
-    # no user seed -> use session reroll as new randomness source
     effective_seed = st.session_state.reroll if st.session_state.reroll > 0 else None
 else:
     try:
@@ -234,25 +225,20 @@ else:
     effective_seed = None if base is None else base + st.session_state.reroll
 
 # ---------------------------------------
-# Layout & render (auto-refresh)
+# Layout & render
 # ---------------------------------------
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    st.markdown("### 🔍 Basic Functions")
-    st.markdown(
-        "- **Auto-refresh** when any control changes  
-"
-        "- **Randomize** with the button for a fresh composition  
-"
-        "- **Palette**: Pastel / Vibrant / Mono / Random / Pink / Blue / Green  
-"
-        "- **Background**: Off-white / Light gray / Dark / Gradient  
-"
-        "- **Shapes**: Blob / Polygon / Waves / Rings  
-"
-        "- **Download** the result as PNG"
-    )
+    st.markdown("### Basic Functions")
+    st.markdown("""
+- Auto-refresh when any control changes  
+- Randomize with the button for a fresh composition  
+- Palette: Pastel / Vibrant / Mono / Random / Pink / Blue / Green  
+- Background: Off-white / Light gray / Dark / Gradient  
+- Shapes: Blob / Polygon / Waves / Rings  
+- Download the result as PNG
+""")
 
 with col_right:
     fig = draw_poster(shape, layers, wobble, palette_kind, bg_mode, seed=effective_seed)
@@ -264,12 +250,11 @@ with col_right:
 png_bytes = io.BytesIO()
 fig.savefig(png_bytes, format="png", dpi=300, bbox_inches="tight")
 st.download_button(
-    "💾 Download Poster as PNG",
+    "Download Poster as PNG",
     data=png_bytes.getvalue(),
     file_name="poster.png",
     mime="image/png",
 )
 
-# Parameter status footer
 st.markdown("---")
-st.caption(f"Palette: **{palette_kind}** | Background: **{bg_mode}** | Shape: **{shape}** | Layers: **{layers}** | Wobble: **{wobble:.2f}** | Reroll: {st.session_state.reroll}")
+st.caption(f"Palette: {palette_kind} | Background: {bg_mode} | Shape: {shape} | Layers: {layers} | Wobble: {wobble:.2f} | Reroll: {st.session_state.reroll}")
