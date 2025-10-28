@@ -12,7 +12,8 @@ st.set_page_config(page_title="Generative Poster v3", layout="wide")
 st.title("Generative Abstract Poster v3")
 st.markdown("**Interactive - Arts & Advanced Big Data**  \nAuto-refresh + Randomize button - Palette & Background themes")
 
-Auto-refresh + Randomize button  Palette & Background themes")
+st.markdown("Auto-refresh + Randomize button - Palette & Background themes")
+
 
 # ---------------------------------------
 # Palette utilities
